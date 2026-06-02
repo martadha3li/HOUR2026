@@ -1,20 +1,63 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><title>حجوزات اليوم والغد</title></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجوزات اليوم والغد</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
-    <div id="nav-placeholder"></div> <h1>حجوزات اليوم (2026-06-02) والغد (2026-06-03)</h1>
-    <div id="dailyList"></div>
+    <div class="nav-bar">
+        <a href="index.html">حجز جديد</a>
+        <a href="daily.html">اليوم والغد</a>
+        <a href="bookings.html">السجل الكامل</a>
+        <a href="finance.html">المالية</a>
+        <a href="admin.html">الإدارة</a>
+    </div>
+
+    <div class="card">
+        <h2>جدول عمليات اليوم والغد</h2>
+        <div class="table-responsive">
+            <table id="dailyTable">
+                <thead>
+                    <tr><th>العميل</th><th>التاريخ</th><th>المرفق</th><th>إجراءات سريعة</th></tr>
+                </thead>
+                <tbody id="dailyBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script type="module">
         import { db } from './config.js';
-        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        import { collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
         async function loadDaily() {
-            // جلب حجوزات اليوم والغد فقط
-            const q = query(collection(db, "bookings"), where("bookingDate", "in", ["2026-06-02", "2026-06-03"]));
+            // تواريخ اليوم والغد (ملاحظة: يمكنك جعلها ديناميكية لاحقاً)
+            const dates = ["2026-06-02", "2026-06-03"]; 
+            const q = query(collection(db, "bookings"), where("bookingDate", "in", dates));
             const snap = await getDocs(q);
-            // عرض النتائج...
+            const tbody = document.getElementById('dailyBody');
+            tbody.innerHTML = '';
+
+            snap.forEach(d => {
+                const b = d.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${b.customerInfo.name}</td>
+                        <td>${b.bookingDate}</td>
+                        <td>${b.facilityName}</td>
+                        <td>
+                            <button class="btn btn-success" onclick="updateStatus('${d.id}', 'checked_in')">دخول</button>
+                            <button class="btn btn-danger" onclick="sendWhatsapp('${b.customerInfo.phone}', '${b.customerInfo.name}')">💬 واتساب</button>
+                        </td>
+                    </tr>`;
+            });
         }
+        
+        window.sendWhatsapp = (phone, name) => {
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=مرحباً ${name}، ننتظركم اليوم!`);
+        }
+        
         loadDaily();
     </script>
 </body>
