@@ -1,33 +1,17 @@
-<!-- finance.html -->
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><title>التقرير المالي</title></head>
-<body>
-    <h1>كشف المبيعات والفرز المالي</h1>
-    <table id="financeTable">
-        <thead>
-            <tr><th>المسؤول</th><th>عدد الحجوزات</th><th>المجموع</th><th>الغرامات</th></tr>
-        </thead>
-        <tbody id="reportsBody"></tbody>
-    </table>
-    <script type="module">
-        import { db } from './config.js';
-        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-        
-        // جلب البيانات وتجميعها (GroupBy) حسب createdBy
-        async function loadFinance() {
-            const snap = await getDocs(collection(db, "bookings"));
-            let stats = {}; 
-            snap.forEach(d => {
-                const b = d.data();
-                if(!stats[b.createdBy]) stats[b.createdBy] = {count:0, sum:0, fines:0};
-                stats[b.createdBy].count++;
-                stats[b.createdBy].sum += b.totalPrice;
-                stats[b.createdBy].fines += (b.damageDetails?.amount || 0);
-            });
-            // عرض النتائج في الجدول...
-        }
-        loadFinance();
-    </script>
-</body>
-</html>
+<html lang="ar" dir="rtl"><head><link rel="stylesheet" href="style.css"></head><body>
+<div class="nav-bar">
+    <a href="index.html">حجز جديد</a> <a href="daily.html">اليوم والغد</a>
+    <a href="bookings.html">السجل الكامل</a> <a href="finance.html">المالية</a>
+</div>
+<div class="card">
+    <table id="fTable"><thead><tr><th>الموظف</th><th>عدد الحجوزات</th></tr></thead><tbody id="fBody"></tbody></table>
+</div>
+<script type="module">
+    import { db } from './config.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    const s = await getDocs(collection(db, "bookings"));
+    let stats = {};
+    s.forEach(d => { let u = d.data().createdBy; stats[u] = (stats[u] || 0) + 1; });
+    for(let u in stats) document.getElementById('fBody').innerHTML += `<tr><td>${u}</td><td>${stats[u]}</td></tr>`;
+</script></body></html>
