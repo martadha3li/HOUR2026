@@ -1,39 +1,17 @@
-<!-- bookings.html -->
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>سجل الحجوزات الكامل</title>
-    <style>
-        .cancelled { background: #f0f0f0; color: #999; } /* باهت */
-        .checked_out { background: #fffdf0; } /* أصفر باهت */
-        .today { background: #e8f5e9; } /* أخضر باهت */
-    </style>
-</head>
-<body>
-    <h1>جميع الحجوزات</h1>
-    <div id="calendar"></div> <!-- هنا مكان الكالندر -->
-    <table id="bookingsTable">
-        <!-- يتم ملء الجدول برمجياً وتطبيق الكلاسات بناءً على الحالة -->
-    </table>
-    <script type="module">
-        import { db } from './config.js';
-        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-        
-        async function loadBookings() {
-            const querySnapshot = await getDocs(collection(db, "bookings"));
-            const tbody = document.getElementById('bookingsTable');
-            querySnapshot.forEach(doc => {
-                const b = doc.data();
-                let rowClass = "";
-                if(b.status === 'cancelled') rowClass = "cancelled";
-                else if(b.status === 'checked_out') rowClass = "checked_out";
-                else if(b.bookingDate === '2026-06-02') rowClass = "today";
-                
-                tbody.innerHTML += `<tr class="${rowClass}"><td>${b.customerInfo.name}</td><td>${b.status}</td></tr>`;
-            });
-        }
-        loadBookings();
-    </script>
-</body>
-</html>
+<html lang="ar" dir="rtl"><head><link rel="stylesheet" href="style.css"></head><body>
+<div class="nav-bar">
+    <a href="index.html">حجز جديد</a> <a href="daily.html">اليوم والغد</a>
+    <a href="bookings.html">السجل الكامل</a> <a href="finance.html">المالية</a>
+</div>
+<div class="card"><table id="fullTable"><thead><tr><th>الاسم</th><th>التاريخ</th><th>الحالة</th></tr></thead><tbody id="fullBody"></tbody></table></div>
+<script type="module">
+    import { db } from './config.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    const s = await getDocs(collection(db, "bookings"));
+    s.forEach(d => { 
+        const b = d.data();
+        let cls = b.status === 'checked_out' ? 'checked_out' : '';
+        document.getElementById('fullBody').innerHTML += `<tr class="${cls}"><td>${b.customerInfo.name}</td><td>${b.bookingDate}</td><td>${b.status}</td></tr>`;
+    });
+</script></body></html>
