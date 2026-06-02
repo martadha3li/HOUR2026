@@ -1,4 +1,3 @@
-// config.js - احفظه بهذا الاسم
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
@@ -10,6 +9,5 @@ const firebaseConfig = {
     messagingSenderId: "1023530532546",
     appId: "1:1023530532546:web:cbc1be1753237179bd455b"
 };
-
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = getFirestore(firebaseConfig);
