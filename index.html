@@ -3,66 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حجوزات الشاليهات والقاعات</title>
+    <title>لوحة تحكم إدارة الشاليهات المتقدمة</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 0 auto; }
-        h2, h3 { text-align: center; color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #219150; }
-        .price-display { background: #e8f8f5; padding: 10px; border-left: 5px solid #2cc990; margin-top: 15px; font-weight: bold; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f0f3f4; color: #333; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 900px) { .grid-container { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2, h3 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; margin: 2px; }
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-primary { background-color: #2980b9; color: white; }
+        .btn-warning { background-color: #f39c12; color: white; }
+        .btn-info { background-color: #8e44ad; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+        th { background-color: #34495e; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .full-width { grid-column: 1 / -1; }
+        
+        /* تصميم النافذة المنبثقة للتلفيات */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 15px% auto; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%; margin-top: 10%; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-footer { margin-top: 15px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>حجز شاليه / قاعة مناسبات</h2>
-    <form id="bookingForm">
-        <h3>بيانات العميل</h3>
-        <div class="form-group">
-            <label>اسم العميل:</label>
-            <input type="text" id="custName" required placeholder="أدخل الاسم الكامل">
-        </div>
-        <div class="form-group">
-            <label>رقم الجوال:</label>
-            <input type="tel" id="custPhone" required placeholder="05xxxxxxxx">
-        </div>
+<h1 style="text-align: center; color: #2c3e50;">لوحة إدارة الشاليهات - الصلاحيات الكاملة للمالك</h1>
 
-        <h3>تفاصيل الحجز</h3>
+<div class="grid-container">
+
+    <div class="card">
+        <h2>إدارة المرافق (شاليهات / قاعات)</h2>
+        <form id="facilityForm">
+            <input type="hidden" id="facilityIdHidden">
+            <div class="form-group">
+                <label>اسم المرفق:</label>
+                <input type="text" id="facName" required>
+            </div>
+            <div class="form-group">
+                <label>السعر العادي (وسط الأسبوع):</label>
+                <input type="number" id="facBasePrice" required>
+            </div>
+            <div class="form-group">
+                <label>سعر الويكند (الجمعة والسبت):</label>
+                <input type="number" id="facWeekendPrice" required>
+            </div>
+            <div class="form-group">
+                <label>وقت التنظيف الفاصل (بالدقائق):</label>
+                <input type="number" id="facBuffer" required value="60">
+            </div>
+            <button type="submit" class="btn btn-success" style="width:100%;">حفظ المرفق</button>
+        </form>
+
+        <h3>المرافق الحالية</h3>
+        <table>
+            <thead>
+                <tr><th>المرفق</th><th>العادي</th><th>الويكند</th><th>إجراء</th></tr>
+            </thead>
+            <tbody id="facilitiesTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>تسجيل حجز جديد</h2>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label>اسم العميل / رقم الجوال:</label>
+                <input type="text" id="custName" placeholder="الاسم الكامل" required style="margin-bottom: 5px;">
+                <input type="tel" id="custPhone" placeholder="05xxxxxxxx" required>
+            </div>
+            <div class="form-group">
+                <label>اختر المرفق والتاريخ:</label>
+                <select id="bookingFacilitySelect" required style="margin-bottom: 5px;"></select>
+                <input type="date" id="bookingDate" required>
+            </div>
+            <div class="form-group">
+                <label>مدة الحجز (بالساعات):</label>
+                <select id="bookingDuration">
+                    <option value="6">6 ساعات</option>
+                    <option value="12" selected>12 ساعة</option>
+                    <option value="24">24 ساعة</option>
+                    <option value="custom">مخصص (أدخل وقت الخروج يدوياً)</option>
+                </select>
+            </div>
+            <div class="grid-container" style="grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:0; padding:0;">
+                <div class="form-group">
+                    <label>وقت الدخول:</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label>وقت الخروج:</label>
+                    <input type="time" id="endTime" required>
+                </div>
+            </div>
+            <div class="grid-container" style="grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:0; padding:0;">
+                <div class="form-group">
+                    <label>العربون المدفوع (ر.س):</label>
+                    <input type="number" id="depositPaid" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>السعر الإجمالي المحسوب تلقائياً (ر.س):</label>
+                    <input type="number" id="totalPriceInput" readonly style="background:#eefcf5; font-weight:bold;">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">التحقق وتأكيد الحجز</button>
+        </form>
+    </div>
+
+    <div class="card full-width">
+        <h2>شاشة العمليات ومراقبة الحجوزات</h2>
+        <table style="width:100%;">
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>المرفق</th>
+                    <th>التاريخ والوقت</th>
+                    <th>المالية (الإجمالي / العربون)</th>
+                    <th>الحالة الحالية</th>
+                    <th>لوحة التحكم الفورية للعميل</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="checkoutModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">تسجيل مغادرة العميل وإخلاء العهدة</div>
+        <input type="hidden" id="modalBookingId">
+        
         <div class="form-group">
-            <label>المرفق المطلوب:</label>
-            <select id="facilityType" required>
-                <option value="chalet_1">شاليه الفخامة (الأساسي: 1000 - الويكند: 1500)</option>
-                <option value="hall_1">قاعة الرومانسية للمناسبات (الأساسي: 3000 - الويكند: 4500)</option>
+            <label>نوع المغادرة:</label>
+            <select id="checkoutType">
+                <option value="normal">مغادرة طبيعية (بدون تلفيات)</option>
+                <option value="damage">مغادرة مع وجود تلفيات / غرامات</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>تاريخ الحجز:</label>
-            <input type="date" id="bookingDate" required>
+        
+        <div id="damageFields" style="display: none;">
+            <div class="form-group">
+                <label>وصف التلفيات بالتفصيل:</label>
+                <textarea id="damageDesc" rows="3" placeholder="مثال: كسر طاولة الصالة الخارجية"></textarea>
+            </div>
+            <div class="form-group">
+                <label>مبلغ التعويض المطلوب (ر.س):</label>
+                <input type="number" id="damageAmount" value="0" min="0">
+            </div>
         </div>
-        <div class="form-group">
-            <label>وقت الدخول (بداية الحجز):</label>
-            <input type="time" id="startTime" required>
+        
+        <div class="modal-footer">
+            <button class="btn btn-success" id="confirmCheckoutBtn">تأكيد عملية الخروج</button>
+            <button class="btn btn-danger" onclick="closeModal()">إلغاء</button>
         </div>
-        <div class="form-group">
-            <label>وقت الخروج (نهاية الحجز):</label>
-            <input type="time" id="endTime" required>
-        </div>
-
-        <button type="submit">التحقق وإتمام الحجز</button>
-    </form>
-
-    <div id="priceDisplay" class="price-display" style="display: none;"></div>
+    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-    // إعدادات Firebase الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyATSMFKx4jUo_Duw0FtD5HO_M69O7A55o0",
         authDomain: "fnews-7525e.firebaseapp.com",
@@ -75,120 +181,202 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    let localFacilities = [];
 
-    // دالة لحساب السعر بناءً على اليوم (ويكند أو عادي) ومواسم معينة
-    function calculatePrice(facilityId, dateStr) {
-        const date = new Date(dateStr);
-        const day = date.getDay(); // 5 = الجمعة, 6 = السبت
-        
-        // أسعار افتراضية للمثال
-        let basePrice = facilityId === "chalet_1" ? 1000 : 3000;
-        let weekendPrice = facilityId === "chalet_1" ? 1500 : 4500;
+    // --- حساب الوقت التلقائي عند اختيار وقت الدخول أو المدة ---
+    function autoCalculateEndTime() {
+        const startTimeVal = document.getElementById('startTime').value;
+        const durationVal = document.getElementById('bookingDuration').value;
+        const endTimeInput = document.getElementById('endTime');
 
-        // التحقق من الويكند (الجمعة والسبت)
-        if (day === 5 || day === 6) {
-            return { price: weekendPrice, type: "سعر نهاية الأسبوع (الويكند)" };
+        if (!startTimeVal || durationVal === 'custom') {
+            endTimeInput.readOnly = false;
+            return;
         }
+
+        endTimeInput.readOnly = true;
+        const [hours, minutes] = startTimeVal.split(':').map(Number);
+        let totalHours = hours + Number(durationVal);
+        let finalMinutes = minutes;
+
+        let endHours = totalHours % 24;
+        let padHours = String(endHours).padStart(2, '0');
+        let padMinutes = String(finalMinutes).padStart(2, '0');
         
-        // هنا يمكنك إضافة شرط إضافي للتواريخ الموسمية (مثل الأعياد والإجازات الرسمية)
-        return { price: basePrice, type: "سعر عادي وسط الأسبوع" };
+        endTimeInput.value = `${padHours}:${padMinutes}`;
     }
 
-    // الاستماع لحدث إرسال النموذج
+    // --- حساب السعر التلقائي بناء على اليوم في الواجهة مباشرة ---
+    function autoCalculatePrice() {
+        const facId = document.getElementById('bookingFacilitySelect').value;
+        const dateStr = document.getElementById('bookingDate').value;
+        if(!facId || !dateStr) return;
+
+        const selectedFac = localFacilities.find(f => f.id === facId);
+        if(!selectedFac) return;
+
+        const day = new Date(dateStr).getDay();
+        const isWeekend = (day === 5 || day === 6);
+        document.getElementById('totalPriceInput').value = isWeekend ? selectedFac.weekendPrice : selectedFac.basePrice;
+    }
+
+    document.getElementById('startTime').addEventListener('input', autoCalculateEndTime);
+    document.getElementById('bookingDuration').addEventListener('change', autoCalculateEndTime);
+    document.getElementById('bookingDate').addEventListener('change', autoCalculatePrice);
+    document.getElementById('bookingFacilitySelect').addEventListener('change', autoCalculatePrice);
+
+    // مراقبة حقول النافذة المنبثقة للتلفيات
+    document.getElementById('checkoutType').addEventListener('change', (e) => {
+        document.getElementById('damageFields').style.display = e.target.value === 'damage' ? 'block' : 'none';
+    });
+
+    // --- إدارة المرافق ---
+    async function loadFacilities() {
+        const querySnapshot = await getDocs(collection(db, "facilities"));
+        const tbody = document.getElementById('facilitiesTableBody');
+        const select = document.getElementById('bookingFacilitySelect');
+        tbody.innerHTML = ''; select.innerHTML = ''; localFacilities = [];
+
+        querySnapshot.forEach((docSnap) => {
+            const fac = docSnap.data(); fac.id = docSnap.id;
+            localFacilities.push(fac);
+            tbody.innerHTML += `<tr><td>${fac.name}</td><td>${fac.basePrice}</td><td>${fac.weekendPrice}</td><td><button class="btn btn-danger" onclick="deleteFacility('${fac.id}')">حذف</button></td></tr>`;
+            select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`;
+        });
+        autoCalculatePrice();
+    }
+
+    document.getElementById('facilityForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await addDoc(collection(db, "facilities"), {
+            name: document.getElementById('facName').value,
+            basePrice: Number(document.getElementById('facBasePrice').value),
+            weekendPrice: Number(document.getElementById('facWeekendPrice').value),
+            buffer: Number(document.getElementById('facBuffer').value)
+        });
+        document.getElementById('facilityForm').reset();
+        loadFacilities();
+    });
+
+    window.deleteFacility = async (id) => {
+        if(confirm("هل تود الحذف؟")) { await deleteDoc(doc(db, "facilities", id)); loadFacilities(); }
+    };
+
+    // --- عرض الحجوزات مع تفعيل أزرار الحالات الاستباقية ---
+    async function loadBookings() {
+        const querySnapshot = await getDocs(collection(db, "bookings"));
+        const tbody = document.getElementById('bookingsTableBody');
+        tbody.innerHTML = '';
+
+        querySnapshot.forEach((docSnap) => {
+            const b = docSnap.data();
+            const id = docSnap.id;
+            
+            let statusBadge = `<span style="color:#d35400;">مؤكد مسبقاً</span>`;
+            if(b.status === 'checked_in') statusBadge = `<span style="color:#2980b9; font-weight:bold;">داخل الشاليه الآن 🟢</span>`;
+            if(b.status === 'checked_out') statusBadge = `<span style="color:#7f8c8d;">تم المغادرة وإغلاق الحجز ⚪</span>`;
+
+            let actionButtons = '';
+            if(b.status === 'confirmed') {
+                actionButtons = `<button class="btn btn-success" onclick="updateStatus('${id}', 'checked_in')">تسجيل دخول العميل</button>`;
+            } else if(b.status === 'checked_in') {
+                actionButtons = `<button class="btn btn-warning" onclick="openCheckoutModal('${id}')">تسجيل خروج ومغادرة</button>`;
+            } else if(b.status === 'checked_out' && b.damageDetails) {
+                statusBadge += `<br><small style="color:red;">تلفيات: ${b.damageDetails.amount} ر.س</small>`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${b.customerInfo.name}</b><br>${b.customerInfo.phone}</td>
+                    <td>${b.facilityName}</td>
+                    <td>${b.bookingDate}<br><small>من ${b.startTime} إلى ${b.endTime}</small></td>
+                    <td>الإجمالي: ${b.totalPrice} ر.س<br>العربون: ${b.depositPaid} ر.س<br><b>المتبقي: ${b.totalPrice - b.depositPaid} ر.س</b></td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButtons}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // تحديث حالة تسجيل الدخول الفوري
+    window.updateStatus = async (id, newStatus) => {
+        await updateDoc(doc(db, "bookings", id), { status: newStatus });
+        loadBookings();
+    };
+
+    // التحكم بالنافذة المنبثقة للتلفيات
+    window.openCheckoutModal = (id) => {
+        document.getElementById('modalBookingId').value = id;
+        document.getElementById('checkoutModal').style.display = 'block';
+    };
+    window.closeModal = () => { document.getElementById('checkoutModal').style.display = 'none'; };
+
+    // تأكيد تسجيل المغادرة وحساب التلفيات والتعويضات إن وجدت
+    document.getElementById('confirmCheckoutBtn').addEventListener('click', async () => {
+        const id = document.getElementById('modalBookingId').value;
+        const type = document.getElementById('checkoutType').value;
+        
+        let updateData = { status: 'checked_out' };
+
+        if(type === 'damage') {
+            updateData.damageDetails = {
+                description: document.getElementById('damageDesc').value,
+                amount: Number(document.getElementById('damageAmount').value)
+            };
+        }
+
+        await updateDoc(doc(db, "bookings", id), updateData);
+        closeModal();
+        loadBookings();
+        alert("تم إغلاق ملف الحجز بنجاح ومغادرة الزبون.");
+    });
+
+    // معالجة وإضافة حجز جديد للزبون يدويًا
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        const facilityId = document.getElementById('facilityType').value;
+        const facId = document.getElementById('bookingFacilitySelect').value;
+        const selectedFac = localFacilities.find(f => f.id === facId);
         const dateStr = document.getElementById('bookingDate').value;
         const startStr = document.getElementById('startTime').value;
         const endStr = document.getElementById('endTime').value;
 
-        // تحويل الأوقات إلى دقائق ليسهل مقارنتها حسابياً واحتساب وقت التنظيف
+        // معالجة منع التداخل الرياضي للساعات والدقائق
         const [startH, startM] = startStr.split(':').map(Number);
         const [endH, endM] = endStr.split(':').map(Number);
-        
-        let reqStart = startH * 60 + startM;
-        let reqEnd = endH * 60 + endM;
+        let reqStart = startH * 60 + startM; let reqEnd = endH * 60 + endM;
+        if (reqEnd <= reqStart) reqEnd += 24 * 60;
+        const reqEndWithBuffer = reqEnd + selectedFac.buffer;
 
-        // إذا كان الحجز ينتهي في اليوم التالي (بعد منتصف الليل)
-        if (reqEnd <= reqStart) {
-            reqEnd += 24 * 60; 
-        }
+        // جلب للتحقق من عدم تضارب التوقيت
+        const q = query(collection(db, "bookings"), where("facilityId", "==", facId), where("bookingDate", "==", dateStr), where("status", "in", ["confirmed", "checked_in"]));
+        const snap = await getDocs(q);
+        let overlap = false;
 
-        const bufferMinutes = 60; // ساعة كاملة فاصلة للتنظيف المحددة من قبلك
+        snap.forEach(doc => {
+            const ex = doc.data();
+            const [sH, sM] = ex.startTime.split(':').map(Number); const [eH, eM] = ex.endTime.split(':').map(Number);
+            let exS = sH * 60 + sM; let exE = eH * 60 + eM; if(exE <= exS) exE += 24 * 60;
+            if ((reqStart >= exS && reqStart < exE + ex.cleaningBufferMinutes) || (reqEndWithBuffer > exS && reqStart < exE)) overlap = true;
+        });
 
-        // وقت الحجز المطلوب الفعلي مضافاً إليه ساعة التنظيف بعده لضمان عدم التداخل
-        const reqEndWithBuffer = reqEnd + bufferMinutes;
+        if(overlap) { alert("خطأ! الوقت متداخل مع حجز قائم أو يتقاطع مع فترة التنظيف لهذا الشاليه!"); return; }
 
-        try {
-            // جلب الحجوزات القائمة لنفس المرفق ونفس التاريخ للتحقق من التداخل
-            const q = query(collection(db, "bookings"), 
-                where("facilityId", "==", facilityId),
-                where("bookingDate", "==", dateStr),
-                where("status", "==", "confirmed")
-            );
+        await addDoc(collection(db, "bookings"), {
+            customerInfo: { name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value },
+            facilityId: facId, facilityName: selectedFac.name, bookingDate: dateStr,
+            startTime: startStr, endTime: endStr, cleaningBufferMinutes: selectedFac.buffer,
+            totalPrice: Number(document.getElementById('totalPriceInput').value),
+            depositPaid: Number(document.getElementById('depositPaid').value),
+            status: "confirmed", createdAt: new Date()
+        });
 
-            const querySnapshot = await getDocs(q);
-            let isOverlapping = false;
-
-            querySnapshot.forEach((doc) => {
-                const existing = doc.data();
-                const [eStartH, eStartM] = existing.startTime.split(':').map(Number);
-                const [eEndH, eEndM] = existing.endTime.split(':').map(Number);
-                
-                let existStart = eStartH * 60 + eStartM;
-                let existEnd = eEndH * 60 + eEndM;
-                if (existEnd <= existStart) existEnd += 24 * 60;
-
-                // إضافة وقت التنظيف للحجز القديم أيضاً للتأكد من المسافة الآمنة
-                let existEndWithBuffer = existEnd + existing.cleaningBufferMinutes;
-
-                // معادلة التحقق الرياضية للتداخل: 
-                // (بداية الحجز الجديد تقع خلال الحجز القديم وفترة تنظيفه) أَوْ (نهاية الحجز الجديد مع تنظيفه تداخلت مع بداية القديم)
-                if ((reqStart >= existStart && reqStart < existEndWithBuffer) || 
-                    (reqEndWithBuffer > existStart && reqStart < existEnd)) {
-                    isOverlapping = true;
-                }
-            });
-
-            if (isOverlapping) {
-                alert("عذراً، هذا الوقت متداخل مع حجز آخر أو يقع ضمن الساعة المخصصة للتنظيف. يرجى اختيار وقت آخر.");
-                return;
-            }
-
-            // حساب السعر تلقائياً بناءً على التاريخ والمرفق
-            const priceDetails = calculatePrice(facilityId, dateStr);
-
-            // إدخال الحجز بنجاح إذا اجتاز التحقق
-            const docRef = await addDoc(collection(db, "bookings"), {
-                customerInfo: {
-                    name: document.getElementById('custName').value,
-                    phone: document.getElementById('custPhone').value
-                },
-                facilityId: facilityId,
-                bookingDate: dateStr,
-                startTime: startStr,
-                endTime: endStr,
-                cleaningBufferMinutes: bufferMinutes,
-                pricingType: priceDetails.type,
-                totalPrice: priceDetails.price,
-                status: "confirmed",
-                createdAt: new Date()
-            });
-
-            // عرض تفاصيل السعر والنجاح للمستخدم
-            const displayDiv = document.getElementById('priceDisplay');
-            displayDiv.style.display = 'block';
-            displayDiv.innerHTML = `تم الحجز بنجاح!<br>نوع السعر: ${priceDetails.type}<br>الإجمالي: ${priceDetails.price} ريال سعودي.`;
-            
-            document.getElementById('bookingForm').reset();
-
-        } catch (error) {
-            console.error("خطأ في معالجة الحجز: ", error);
-            alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
-        }
+        alert("تم التوثيق والحجز بنجاح!");
+        document.getElementById('bookingForm').reset();
+        loadBookings();
     });
-</script>
 
+    loadFacilities();
+    loadBookings();
+</script>
 </body>
 </html>
