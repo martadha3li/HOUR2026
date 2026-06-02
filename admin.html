@@ -2,136 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة والتقارير المالية</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 10px; background-color: #f4f6f8; color: #333; }
-        .nav-bar { background: #2c3e50; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; }
-        .nav-bar a { color: white; text-decoration: none; padding: 8px 12px; background: #34495e; border-radius: 4px; font-size: 14px; }
-        .nav-bar a.active { background: #2980b9; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .full-width { grid-column: 1 / -1; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
-        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-danger { background: #e74c3c; width: auto; padding: 5px 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: right; }
-        th { background: #f1f5f9; }
-    </style>
+    <title>إدارة المرافق</title>
+    <style>body{font-family:sans-serif; padding:20px; background:#f4f4f4;} .card{background:#fff; padding:15px; border-radius:8px; margin-bottom:10px;}</style>
 </head>
 <body>
-
-<div class="nav-bar">
-    <a href="admin.html" class="active">⚙️ الإدارة والمالية</a>
-    <a href="index.html">📅 حجوزات اليوم والغد</a>
-    <a href="all-bookings.html">📂 الأرشيف والتقويم الكامل</a>
-</div>
-
-<div class="grid">
-    <!-- إدارة المرافق -->
     <div class="card">
-        <h2>إعدادات المرافق والأسعار</h2>
-        <form id="facilityForm">
-            <div class="form-group"><label>اسم المرفق:</label><input type="text" id="facName" required></div>
-            <div class="form-group"><label>السعر العادي:</label><input type="number" id="facBasePrice" required></div>
-            <div class="form-group"><label>سعر الويكند:</label><input type="number" id="facWeekendPrice" required></div>
-            <div class="form-group"><label>زيادة سعر المواسم (ر.س):</label><input type="number" id="facSeasonExtra" value="500" required></div>
-            <div class="form-group"><label>وقت التنظيف (بالدقائق):</label><input type="number" id="facBuffer" value="60" required></div>
-            <button type="submit" class="btn">حفظ المرفق الجديد</button>
+        <h2>إضافة مرافق جديدة</h2>
+        <form id="facForm">
+            <input type="text" id="facName" placeholder="اسم المرفق" required><br>
+            <input type="number" id="basePrice" placeholder="السعر العادي" required><br>
+            <input type="number" id="weekendPrice" placeholder="سعر الويكند" required><br>
+            <input type="number" id="seasonExtra" placeholder="زيادة الموسم" required><br>
+            <button type="submit">حفظ المرفق</button>
         </form>
-        <table>
-            <thead><tr><th>المرفق</th><th>العادي</th><th>الويكند</th><th>إجراء</th></tr></thead>
-            <tbody id="facilitiesTableBody"></tbody>
-        </table>
     </div>
+    <div id="facList"></div>
 
-    <!-- التقارير المالية والفرز -->
-    <div class="card">
-        <h2>📊 تقارير مبيعات وفرز الموظفين ماليًا</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>المسؤول</th>
-                    <th>الحجوزات</th>
-                    <th>الإيرادات</th>
-                    <th>العرابين</th>
-                    <th>الغرامات</th>
-                </tr>
-            </thead>
-            <tbody id="reportsTableBody"></tbody>
-        </table>
-    </div>
-</div>
+    <script type="module">
+        import { db } from './config.js'; // استدعاء الإعدادات المشتركة
+        import { collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyATSMFKx4jUo_Duw0FtD5HO_M69O7A55o0",
-        authDomain: "fnews-7525e.firebaseapp.com",
-        databaseURL: "https://fnews-7525e-default-rtdb.firebaseio.com",
-        projectId: "fnews-7525e",
-        storageBucket: "fnews-7525e.firebasestorage.app",
-        messagingSenderId: "1023530532546",
-        appId: "1:1023530532546:web:cbc1be1753237179bd455b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    async function loadAdminData() {
-        // جلب المرافق
-        const facSnap = await getDocs(collection(db, "facilities"));
-        const facTbody = document.getElementById('facilitiesTableBody');
-        facTbody.innerHTML = '';
-        facSnap.forEach(docSnap => {
-            const fac = docSnap.data();
-            facTbody.innerHTML += `<tr><td>${fac.name}</td><td>${fac.basePrice}</td><td>${fac.weekendPrice}</td><td><button class="btn btn-danger" onclick="deleteFacility('${docSnap.id}')">حذف</button></td></tr>`;
+        document.getElementById('facForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, "facilities"), {
+                name: document.getElementById('facName').value,
+                basePrice: Number(document.getElementById('basePrice').value),
+                weekendPrice: Number(document.getElementById('weekendPrice').value),
+                seasonExtra: Number(document.getElementById('seasonExtra').value)
+            });
+            alert("تم الحفظ!");
+            location.reload();
         });
 
-        // جلب الحجوزات لبناء التقارير والفرز المالي
-        const bookSnap = await getDocs(collection(db, "bookings"));
-        const reportsBody = document.getElementById('reportsTableBody');
-        reportsBody.innerHTML = '';
-        let staffMap = {};
-
-        bookSnap.forEach(docSnap => {
-            const b = docSnap.data();
-            const staff = b.createdBy || "غير محدد";
-            if(!staffMap[staff]) staffMap[staff] = { count: 0, total: 0, deposit: 0, damages: 0 };
-            staffMap[staff].count += 1;
-            staffMap[staff].total += Number(b.totalPrice || 0);
-            staffMap[staff].deposit += Number(b.depositPaid || 0);
-            if(b.damageDetails) staffMap[staff].damages += Number(b.damageDetails.amount || 0);
-        });
-
-        for(let key in staffMap) {
-            reportsBody.innerHTML += `<tr><td><b>${key}</b></td><td>${staffMap[key].count}</td><td style="color:green;">${staffMap[key].total}</td><td>${staffMap[key].deposit}</td><td style="color:red;">${staffMap[key].damages}</td></tr>`;
-        }
-    }
-
-    document.getElementById('facilityForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await addDoc(collection(db, "facilities"), {
-            name: document.getElementById('facName').value,
-            basePrice: Number(document.getElementById('facBasePrice').value),
-            weekendPrice: Number(document.getElementById('facWeekendPrice').value),
-            seasonExtra: Number(document.getElementById('facSeasonExtra').value),
-            buffer: Number(document.getElementById('facBuffer').value)
-        });
-        document.getElementById('facilityForm').reset();
-        loadAdminData();
-    });
-
-    window.deleteFacility = async (id) => {
-        if(confirm("هل تود الحذف المرفق؟")) { await deleteDoc(doc(db, "facilities", id)); loadAdminData(); }
-    };
-
-    loadAdminData();
-</script>
+        // جلب وعرض المرافق...
+    </script>
 </body>
 </html>
